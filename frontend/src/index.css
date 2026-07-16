@@ -1,0 +1,126 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+}
+
+code, .mono {
+    font-family: "IBM Plex Mono", monospace;
+}
+
+.font-display {
+    font-family: "Outfit", sans-serif;
+    letter-spacing: -0.015em;
+}
+
+@layer base {
+    :root {
+        /* Infyro light — warm off-white, ink text, warm indigo accent */
+        --background: 40 20% 99%;         /* #FDFDFC-ish */
+        --foreground: 240 6% 8%;          /* deep ink */
+        --card: 0 0% 100%;
+        --card-foreground: 240 6% 8%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 240 6% 8%;
+        --primary: 244 75% 58%;           /* warm indigo #4F46E5 */
+        --primary-foreground: 0 0% 100%;
+        --secondary: 240 5% 96%;
+        --secondary-foreground: 240 6% 12%;
+        --muted: 240 5% 96%;
+        --muted-foreground: 240 4% 40%;
+        --accent: 244 75% 96%;
+        --accent-foreground: 244 60% 30%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 240 5% 90%;
+        --input: 240 5% 88%;
+        --ring: 244 75% 58%;
+        --success: 142 68% 40%;
+        --radius: 0.9rem;
+    }
+    .dark {
+        /* Soft night, not pure black */
+        --background: 240 8% 8%;          /* #111113 */
+        --foreground: 240 5% 93%;
+        --card: 240 6% 11%;               /* #1A1A1D */
+        --card-foreground: 240 5% 93%;
+        --popover: 240 6% 11%;
+        --popover-foreground: 240 5% 93%;
+        --primary: 244 78% 63%;           /* slightly lighter indigo */
+        --primary-foreground: 0 0% 100%;
+        --secondary: 240 5% 15%;
+        --secondary-foreground: 240 5% 93%;
+        --muted: 240 5% 15%;
+        --muted-foreground: 240 4% 62%;
+        --accent: 244 40% 20%;
+        --accent-foreground: 244 80% 85%;
+        --destructive: 0 68% 55%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 240 5% 18%;
+        --input: 240 5% 18%;
+        --ring: 244 78% 63%;
+        --success: 142 65% 48%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    html, body, #root {
+        height: 100%;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+    ::selection {
+        background: hsl(var(--primary) / 0.22);
+        color: hsl(var(--foreground));
+    }
+}
+
+@layer utilities {
+    .fade-in {
+        animation: fadeIn 200ms ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .num {
+        font-family: "IBM Plex Mono", monospace;
+        font-feature-settings: "tnum";
+    }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+    [data-debug-wrapper="true"] > * {
+        margin-left: inherit;
+        margin-right: inherit;
+        margin-top: inherit;
+        margin-bottom: inherit;
+        padding-left: inherit;
+        padding-right: inherit;
+        padding-top: inherit;
+        padding-bottom: inherit;
+        column-gap: inherit;
+        row-gap: inherit;
+        gap: inherit;
+        border-left-width: inherit;
+        border-right-width: inherit;
+        border-top-width: inherit;
+        border-bottom-width: inherit;
+    }
+}

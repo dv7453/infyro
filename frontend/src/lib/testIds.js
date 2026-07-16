@@ -1,0 +1,54 @@
+export const TID = {
+    // login
+    loginPhoneInput: "login-phone-input",
+    loginCountryCode: "login-country-code",
+    loginContinueBtn: "login-continue-btn",
+    // verify
+    verifyOtpInput: "verify-otp-input",
+    verifyContinueBtn: "verify-continue-btn",
+    verifyResendBtn: "verify-resend-btn",
+    // welcome
+    welcomeNameInput: "welcome-name-input",
+    welcomeNameContinue: "welcome-name-continue",
+    welcomeEmailInput: "welcome-email-input",
+    welcomeEmailContinue: "welcome-email-continue",
+    welcomeAgeInput: "welcome-age-input",
+    welcomeAgeContinue: "welcome-age-continue",
+    // home
+    homeGreeting: "home-greeting",
+    homeCreateAgent: "home-create-agent-btn",
+    homeAgentCard: "home-agent-card",
+    // agents
+    agentsCreateBtn: "agents-create-btn",
+    // agent wizard
+    wizNameInput: "wiz-name-input",
+    wizColorOption: "wiz-color-option",
+    wizNextBtn: "wiz-next-btn",
+    wizBackBtn: "wiz-back-btn",
+    wizMarketChip: "wiz-market-chip",
+    wizPersonaCard: "wiz-persona-card",
+    wizPersonaText: "wiz-persona-text",
+    wizApiKey: "wiz-api-key",
+    wizFinishBtn: "wiz-finish-btn",
+    // agent detail
+    agentDetailRename: "agent-detail-rename",
+    agentDetailToggle: "agent-detail-toggle",
+    agentDetailTgBtn: "agent-detail-telegram-btn",
+    agentTabChat: "agent-tab-chat",
+    agentTabLearned: "agent-tab-learned",
+    agentTabListening: "agent-tab-listening",
+    agentTabHowTalks: "agent-tab-how-talks",
+    agentForgetBtn: "agent-forget-btn",
+    agentDeleteBtn: "agent-delete-btn",
+    agentSaveHowTalks: "agent-save-how-talks",
+    // nav
+    navHome: "nav-home",
+    navAgents: "nav-agents",
+    navAlerts: "nav-alerts",
+    navSettings: "nav-settings",
+    // settings
+    settingsSignOut: "settings-sign-out",
+    settingsDeleteAccount: "settings-delete-account",
+    settingsThemeToggle: "settings-theme-toggle",
+    settingsTelegramLink: "settings-telegram-link",
+};

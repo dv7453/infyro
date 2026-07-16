@@ -1,0 +1,60 @@
+{
+  "tools": {
+    "profile": "minimal",
+    "deny": [
+      "browser",
+      "canvas",
+      "message",
+      "group:messaging",
+      "sessions_spawn",
+      "subagents",
+      "web_search",
+      "web_fetch",
+      "group:runtime"
+    ],
+    "allow": ["bundle-mcp"]
+  },
+  "mcp": {
+    "servers": {
+      "finance-tools": {
+        "command": "uv",
+        "args": ["run", "--directory", "{{INFYRO_ROOT}}", "finance-tools-mcp"],
+        "toolFilter": {
+          "include": ["get_watchlist", "write_alert", "update_watchlist_price", "get_agent_config"]
+        }
+      },
+      "yahoo-finance": {
+        "command": "uv",
+        "args": ["run", "--directory", "{{INFYRO_ROOT}}", "market-yahoo-mcp"],
+        "toolFilter": {
+          "include": ["get_quote", "get_history"]
+        }
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "sandbox": {
+        "mode": "off"
+      }
+    }
+  },
+  "cron": {
+    "enabled": true,
+    "jobs": [
+      {
+        "name": "infyro-market-scan",
+        "everyMs": 300000,
+        "payload": {
+          "kind": "systemEvent",
+          "text": "Run Infyro market scan: for each watchlist item from finance-tools get_watchlist, fetch the current price via yahoo get_quote or CoinGecko HTTP, compare against threshold_pct, and call write_alert when crossed. Never message users."
+        }
+      }
+    ]
+  },
+  "gateway": {
+    "mode": "local",
+    "bind": "loopback",
+    "port": 18790
+  }
+}

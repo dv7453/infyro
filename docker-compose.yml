@@ -1,0 +1,21 @@
+name: infyro
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-infyro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-infyro}
+      POSTGRES_DB: ${POSTGRES_DB:-infyro}
+    ports:
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-infyro} -d ${POSTGRES_DB:-infyro}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
