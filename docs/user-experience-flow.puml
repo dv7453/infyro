@@ -1,0 +1,58 @@
+@startuml Infyro_User_Experience_Flow
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam ActivityBackgroundColor #EEF2FF
+skinparam ActivityBorderColor #4F46E5
+skinparam ActivityDiamondBackgroundColor #F8FAFC
+skinparam ActivityDiamondBorderColor #64748B
+skinparam ArrowColor #334155
+skinparam TitleFontSize 18
+skinparam TitleFontColor #0F172A
+
+title Infyro — User experience flow\n(for everyday personal use · no coding required)
+
+|You|
+start
+:Hear about Infyro\nand open the web dashboard;
+
+|Web dashboard|
+:See your home screen\n(watchers + alerts at a glance);
+
+if (Have a watcher yet?) then (no)
+  :Tap **Create watcher**;
+  :Pick a name + color;
+  :Choose how it talks\n(straight / careful / friendly);
+  :Choose what it watches\n(stocks, crypto, news sources);
+  :Paste your own AI key\n(Groq / OpenAI / Claude)\n— your key, your control;
+else (yes)
+endif
+
+:Open **Settings**;
+:Link Telegram with one tap\n(opens @InfyroMarketBot);
+
+|Telegram|
+:Tap **Start** in Telegram\nto connect your account;
+
+fork
+  :Ask questions in chat\ne.g. "AAPL price?"\nor "stock prices?";
+  :Get a clear answer\nfrom your watcher;
+fork again
+  :Watcher keeps an eye\non your markets;
+  :Get an alert in Telegram\nwhen something moves;
+end fork
+
+|Web dashboard|
+:Come back anytime to\npause / edit / add watchers;
+
+stop
+
+legend right
+  |= Step |= Where |
+  | Create & manage | Web dashboard |
+  | Chat & alerts | Telegram |
+  | AI brain | Your own API key (BYOK) |
+endlegend
+
+@enduml
