@@ -8,51 +8,63 @@ skinparam ActivityBorderColor #4F46E5
 skinparam ActivityDiamondBackgroundColor #F8FAFC
 skinparam ActivityDiamondBorderColor #64748B
 skinparam ArrowColor #334155
-skinparam TitleFontSize 18
+skinparam TitleFontSize 16
 skinparam TitleFontColor #0F172A
 
-title Infyro — User experience flow\n(for everyday personal use · no coding required)
+title Infyro — User experience flow\nBeta 0.0.1 · create agents · connect channels · use tools
 
 |You|
 start
-:Hear about Infyro\nand open the web dashboard;
+:Open Infyro dashboard\n(beta 0.0.1);
 
-|Web dashboard|
-:See your home screen\n(watchers + alerts at a glance);
+|Dashboard|
+:Land on Home — see your agents\nat a glance (status, last activity);
 
-if (Have a watcher yet?) then (no)
-  :Tap **Create watcher**;
-  :Pick a name + color;
-  :Choose how it talks\n(straight / careful / friendly);
-  :Choose what it watches\n(stocks, crypto, news sources);
-  :Paste your own AI key\n(Groq / OpenAI / Claude)\n— your key, your control;
-else (yes)
-endif
+:Create a new agent\n(any purpose you want — not locked to finance);
 
-:Open **Settings**;
-:Link Telegram with one tap\n(opens @InfyroMarketBot);
+partition "Customise the agent" {
+  :Name + avatar color;
+  :Persona / how it should talk;
+  :Model settings\n(provider, temperature, style);
+  :Paste your own LLM API key (BYOK);
+  :Attach tools / MCPs\n(live data, actions, your APIs…);
+  :Pick channels to reach people\n(Telegram · Slack · Email · more…);
+}
 
-|Telegram|
-:Tap **Start** in Telegram\nto connect your account;
+:Save — agent is ready;
+
+|Channels|
+:Link a channel from Settings\ne.g. Telegram / Slack / Email;
 
 fork
-  :Ask questions in chat\ne.g. "AAPL price?"\nor "stock prices?";
-  :Get a clear answer\nfrom your watcher;
+  :Message the agent\non that channel;
 fork again
-  :Watcher keeps an eye\non your markets;
-  :Get an alert in Telegram\nwhen something moves;
+  :Agent can pull **live data**\nvia tools (quotes, docs, APIs…);
+fork again
+  :Or run an **action** via MCP\ne.g. user says "buy Sensex"\non Telegram → trading MCP executes\n(example of tool-driven actions);
 end fork
 
-|Web dashboard|
-:Come back anytime to\npause / edit / add watchers;
+|Dashboard|
+:Review replies, memory, alerts;
+:Tweak temperature, persona,\ntools, or channels anytime;
+:Pause / resume / delete agents;
+
+note right
+  **Beta 0.0.1**
+  Finance niche in this build
+  is a demo — the product idea is
+  “your agents, your channels,
+  your tools.”
+end note
 
 stop
 
 legend right
-  |= Step |= Where |
-  | Create & manage | Web dashboard |
-  | Chat & alerts | Telegram |
-  | AI brain | Your own API key (BYOK) |
+  |= Idea |= Meaning |
+  | Agent | A customisable AI worker you create |
+  | Channel | Where you talk to it (Tele, Slack, Email…) |
+  | Tool / MCP | Live data **or** real actions |
+  | BYOK | Your LLM key — you control cost |
 endlegend
 
 @enduml

@@ -2,64 +2,63 @@
 
 **Every market, one thread.** · beta 0.0.1
 
-Infyro is built for **everyday people**, not just developers or traders.  
-It makes personal AI useful in plain language: create a “watcher,” talk to it on Telegram, and get market updates and alerts without writing code or learning complicated tools. You bring your own AI key (BYOK) — so you stay in control of cost and privacy.
+Infyro is for **anyone** who wants personal AI agents without building infrastructure.  
+You create an agent, customise how it thinks (persona, model, **temperature**, tools), connect it to the places you already live — **Telegram, Slack, email, and more** — and talk to it there. It can fetch **live data** or trigger **real actions** through tools/MCPs (example: you message “buy Sensex” on Telegram → a trading MCP carries it out).
 
-Telegram markets co-pilot + simple web dashboard. Watch stocks and crypto, ask questions in chat, get notified when something moves.
+This repo’s first niche is **markets** (prices + alerts) as a working demo. The product direction is broader: **your agents · your channels · your tools**.
+
+> **Beta 0.0.1** — early build. Dashboard + Telegram path are live; Slack/email and more action MCPs are part of the vision / next iterations.
 
 ## User experience flow
 
-How a non-technical person uses Infyro end-to-end:
+How easy it is to customise and use an agent (beta 0.0.1):
 
 ```mermaid
 flowchart TD
-  A[Open the web dashboard] --> B{Have a watcher?}
-  B -->|No| C[Create a watcher]
-  C --> D[Pick name, tone, and markets]
-  D --> E[Add your own AI key]
-  E --> F[Link Telegram]
-  B -->|Yes| F
-  F --> G[Tap Start in Telegram]
-  G --> H[Ask in chat e.g. AAPL price?]
-  G --> I[Get alerts when markets move]
-  H --> J[Clear answers from your watcher]
+  A[Open Infyro dashboard] --> B[Create any agent you want]
+  B --> C[Customise: name, persona, temperature, model]
+  C --> D[Add your LLM key BYOK]
+  D --> E[Attach tools / MCPs — live data or actions]
+  E --> F[Connect channels: Telegram / Slack / Email / …]
+  F --> G{How do you use it?}
+  G -->|Ask for live data| H[Agent calls tools and replies on the channel]
+  G -->|Ask for an action| I[Example: buy Sensex on Telegram → MCP executes]
+  H --> J[Dashboard: memory, alerts, settings]
   I --> J
-  J --> K[Return to dashboard anytime\nto pause, edit, or add watchers]
+  J --> K[Tweak temperature, persona, tools, channels anytime]
 ```
 
-PlantUML source (same flow): [`docs/user-experience-flow.puml`](docs/user-experience-flow.puml)
+Full PlantUML: [`docs/user-experience-flow.puml`](docs/user-experience-flow.puml)
 
 ```plantuml
 @startuml
-title Infyro — User experience flow
+title Infyro UX — beta 0.0.1
 
 |You|
 start
-:Open the web dashboard;
+:Open dashboard;
 
-|Web dashboard|
-if (Have a watcher?) then (no)
-  :Create a watcher;
-  :Pick name + how it talks;
-  :Choose markets to watch;
-  :Paste your own AI key;
-else (yes)
-endif
-:Link Telegram;
+|Dashboard|
+:Create any agent;
+:Customise persona + temperature + model;
+:BYOK LLM key;
+:Attach tools / MCPs;
+:Connect Telegram / Slack / Email / …;
 
-|Telegram|
-:Tap Start on the bot;
+|Channels|
 fork
-  :Ask questions in chat;
+  :Ask for live data;
 fork again
-  :Receive market alerts;
+  :Ask for an action\n(e.g. "buy Sensex" → MCP);
 end fork
 
-|Web dashboard|
-:Manage watchers anytime;
+|Dashboard|
+:Review + tweak settings anytime;
 stop
 @enduml
 ```
+
+**What you customise on the dashboard (beta):** agent name & look, persona text, LLM provider + key, temperature/style, which tools/sources are bound, channel linking (Telegram live today), pause/resume, memory & conversation history, alerts.
 
 ## Architecture
 
@@ -67,10 +66,10 @@ stop
 
 | Role | Does | Must not |
 |------|------|----------|
-| Hermes | Telegram, LLM chat, deliver alerts | Own cron price jobs |
-| OpenClaw worker | Fetch prices, write alerts | Telegram / LLM |
-| FastAPI | REST + JWT + OTP | Chat loop |
-| finance-tools MCP | Typed Postgres tools | — |
+| Hermes | Channel runtime (Telegram today): chat, memory, deliver alerts | Own cron jobs |
+| OpenClaw worker | Background checks / tool-driven jobs | Talk to users directly |
+| FastAPI | Auth, agents, settings, catalog | Conversational loop |
+| Tools / MCP | Live data **and** actions | — |
 
 ## Repo layout
 
@@ -78,11 +77,11 @@ stop
 apps/api/          FastAPI
 frontend/          React dashboard (Vite)
 packages/db/       Models + migrations
-packages/*_mcp/    Market / finance tools
-runtimes/hermes/   Telegram + chat
-runtimes/openclaw/ Price worker
+packages/*_mcp/    Tools (demo: markets)
+runtimes/hermes/   Channel runtime (Telegram)
+runtimes/openclaw/ Background worker
 scripts/           migrate, seed, doctor, start-all
-docs/              Deploy notes, UX PlantUML, architecture image
+docs/              Deploy, UX PlantUML, architecture
 ```
 
 ## Local quick start
@@ -104,10 +103,10 @@ uv run uvicorn infyro_api.main:app --host 127.0.0.1 --port 8000
 # Dashboard
 cd frontend && npm install && npm run dev
 
-# Telegram bot (separate terminal)
+# Telegram channel runtime (separate terminal)
 uv run python runtimes/hermes/runtime.py
 
-# Optional alerts worker
+# Optional background worker
 uv run python runtimes/openclaw/market_worker.py --once
 ```
 
@@ -131,6 +130,6 @@ Set `INFYRO_DEV_MODE=0` and `VITE_SKIP_AUTH=0` before a real launch.
 ## Scripts
 
 - `./scripts/migrate.sh` — Alembic upgrade  
-- `./scripts/seed.sh` — MCP catalog seed  
+- `./scripts/seed.sh` — catalog seed  
 - `./scripts/doctor.sh` — health check  
 - `./scripts/start-all.sh` — local all-in-one  
