@@ -62,6 +62,8 @@ Set `INFYRO_DEV_MODE=0` and `VITE_SKIP_AUTH=0` before a real launch.
 
 ## Architecture
 
+![Infyro system architecture](docs/architecture.jpg)
+
 | Role | Does | Must not |
 |------|------|----------|
 | Hermes | Telegram, LLM chat, deliver alerts | Own cron price jobs |
