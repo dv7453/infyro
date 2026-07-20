@@ -7,7 +7,8 @@ Node.js (TypeScript) API for the Google-connected AI agent. Exposes REST setting
 1. Complete the manual console steps in [`SETUP.md`](SETUP.md).
 2. Run [`migrations/001_initial.sql`](migrations/001_initial.sql) in the Supabase SQL Editor.
 3. (Optional WhatsApp) Follow [`WHATSAPP_SETUP.md`](WHATSAPP_SETUP.md) and run [`migrations/002_whatsapp.sql`](migrations/002_whatsapp.sql).
-4. Node.js 20+.
+4. (Optional Telegram) Follow [`TELEGRAM_SETUP.md`](TELEGRAM_SETUP.md) and run [`migrations/004_telegram.sql`](migrations/004_telegram.sql).
+5. Node.js 20+.
 
 ## Setup
 
@@ -46,6 +47,10 @@ VITE_BACKEND_URL=http://localhost:8080
 | `WHATSAPP_PHONE_NUMBER_ID` | WhatsApp Cloud API phone number ID |
 | `WHATSAPP_VERIFY_TOKEN` | Shared secret for Meta webhook verification |
 | `WHATSAPP_BUSINESS_NUMBER` | Display number for Settings (e.g. `+1 555…`) |
+| `TELEGRAM_BOT_TOKEN` | Bot token from [@BotFather](https://t.me/BotFather) |
+| `TELEGRAM_BOT_USERNAME` | Bot username without `@` (for deep links) |
+| `TELEGRAM_WEBHOOK_SECRET` | Optional secret for webhook header checks |
+| `TELEGRAM_USE_POLLING` | `true` for local long-polling (no public URL) |
 
 ## Scripts
 
@@ -68,7 +73,11 @@ All REST routes require `Authorization: Bearer <supabase access token>`.
 - `POST /api/settings/whatsapp/generate-code` — 6-digit link code (10 min)
 - `GET /api/settings/whatsapp/status` — `{ linked, phone_number }`
 - `POST /api/settings/whatsapp/unlink`
+- `POST /api/settings/telegram/generate-code` — 6-digit link code + deep link
+- `GET /api/settings/telegram/status` — `{ linked, chat_id, telegram_username, bot_username }`
+- `POST /api/settings/telegram/unlink`
 - `GET/POST /webhooks/whatsapp` — Meta Cloud API webhook
+- `POST /webhooks/telegram` — Telegram Bot API webhook
 - `GET /health` — liveness check
 
 WebSocket `/ws` message types match the frontend contract (`auth`, `user_message`, `confirm` inbound; `auth_ok` / `token` / `tool_*` / `message_complete` / `error` outbound).

@@ -1,7 +1,8 @@
+import type OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { HIGH_RISK_TOOLS } from "../db/agentSettings.js";
 import { TOOL_NAMES, isToolName } from "../tools/schemas.js";
-import { getHeavyModel, getLightModel, groq } from "./groq.js";
+import type { LlmRuntime } from "./llm.js";
 
 const CLASSIFY_TIMEOUT_MS = 1500;
 
@@ -70,10 +71,12 @@ function recentContext(
 }
 
 async function classifyPlausibleTools(
+  client: OpenAI,
+  lightModel: string,
   history: ChatCompletionMessageParam[],
 ): Promise<string[]> {
-  const completion = await groq.chat.completions.create({
-    model: getLightModel(),
+  const completion = await client.chat.completions.create({
+    model: lightModel,
     messages: [
       { role: "system", content: CLASSIFY_SYSTEM },
       ...recentContext(history),
@@ -122,14 +125,15 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
  * Fail-safe: classification errors/timeouts → heavy.
  */
 export async function selectModelForTurn(
+  llm: LlmRuntime,
   history: ChatCompletionMessageParam[],
 ): Promise<string> {
-  const light = getLightModel();
-  const heavy = getHeavyModel();
+  const light = llm.lightModel;
+  const heavy = llm.heavyModel;
 
   try {
     const plausible = await withTimeout(
-      classifyPlausibleTools(history),
+      classifyPlausibleTools(llm.client, light, history),
       CLASSIFY_TIMEOUT_MS,
     );
     const highRisk = plausible.some((name) => HIGH_RISK_TOOLS.includes(name));

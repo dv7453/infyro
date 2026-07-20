@@ -112,6 +112,85 @@ export function disconnect(accessToken: string) {
   });
 }
 
+export type FeedbackSubmission = {
+  id: string;
+  email: string;
+  name: string;
+  message: string;
+  created_at: string;
+};
+
+export function submitFeedback(
+  accessToken: string,
+  data: { name: string; message: string },
+) {
+  return apiFetch<FeedbackSubmission>("/api/feedback", accessToken, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export type TelegramStatus = {
+  linked: boolean;
+  chat_id: string | null;
+  telegram_username: string | null;
+  bot_username: string | null;
+  configured: boolean;
+};
+
+export type TelegramLinkCode = {
+  code: string;
+  expires_at: string;
+  bot_username: string | null;
+  deep_link: string | null;
+};
+
+export function getTelegramStatus(accessToken: string) {
+  return apiFetch<TelegramStatus>("/api/settings/telegram/status", accessToken);
+}
+
+export function generateTelegramCode(accessToken: string) {
+  return apiFetch<TelegramLinkCode>(
+    "/api/settings/telegram/generate-code",
+    accessToken,
+    { method: "POST" },
+  );
+}
+
+export function unlinkTelegram(accessToken: string) {
+  return apiFetch<{ ok: boolean }>(
+    "/api/settings/telegram/unlink",
+    accessToken,
+    { method: "POST" },
+  );
+}
+
+export type ByokProvider = "groq" | "openai";
+
+export type ByokSettings = {
+  provider: ByokProvider;
+  has_key: boolean;
+  key_hint: string | null;
+};
+
+export function getByok(accessToken: string) {
+  return apiFetch<ByokSettings>("/api/settings/byok", accessToken);
+}
+
+export function updateByok(
+  accessToken: string,
+  data: {
+    provider: ByokProvider;
+    api_key?: string;
+    clear?: boolean;
+  },
+) {
+  return apiFetch<ByokSettings>("/api/settings/byok", accessToken, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function storeTokens(
   accessToken: string,
   providerRefreshToken: string,

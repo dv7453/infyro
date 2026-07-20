@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedAgentRouteImport } from './routes/_authenticated/agent'
+import { Route as AuthenticatedFormRouteImport } from './routes/_authenticated/form'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 
@@ -29,6 +30,11 @@ const AuthenticatedAgentRoute = AuthenticatedAgentRouteImport.update({
   path: '/agent',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedFormRoute = AuthenticatedFormRouteImport.update({
+  id: '/form',
+  path: '/form',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -43,12 +49,14 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agent': typeof AuthenticatedAgentRoute
+  '/form': typeof AuthenticatedFormRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agent': typeof AuthenticatedAgentRoute
+  '/form': typeof AuthenticatedFormRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
@@ -57,19 +65,21 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/agent': typeof AuthenticatedAgentRoute
+  '/_authenticated/form': typeof AuthenticatedFormRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agent' | '/settings' | '/auth/callback'
+  fullPaths: '/' | '/agent' | '/form' | '/settings' | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agent' | '/settings' | '/auth/callback'
+  to: '/' | '/agent' | '/form' | '/settings' | '/auth/callback'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/_authenticated/agent'
+    | '/_authenticated/form'
     | '/_authenticated/settings'
     | '/auth/callback'
   fileRoutesById: FileRoutesById
@@ -103,6 +113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgentRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/form': {
+      id: '/_authenticated/form'
+      path: '/form'
+      fullPath: '/form'
+      preLoaderRoute: typeof AuthenticatedFormRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -122,11 +139,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAgentRoute: typeof AuthenticatedAgentRoute
+  AuthenticatedFormRoute: typeof AuthenticatedFormRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAgentRoute: AuthenticatedAgentRoute,
+  AuthenticatedFormRoute: AuthenticatedFormRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 

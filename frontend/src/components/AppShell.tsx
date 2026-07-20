@@ -1,5 +1,11 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { MessageSquare, Settings as SettingsIcon, LogOut } from "lucide-react";
+import {
+  MessageSquare,
+  Settings as SettingsIcon,
+  ClipboardList,
+  LogOut,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { ChatSessionProvider } from "@/components/agent/ChatSessionProvider";
 import { getSessionUser, signOut, type AuthUser } from "@/lib/auth";
@@ -13,7 +19,7 @@ function RailButton({
 }: {
   to: string;
   label: string;
-  icon: typeof MessageSquare;
+  icon: LucideIcon;
   active: boolean;
 }) {
   return (
@@ -84,6 +90,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               label="Agent"
               icon={MessageSquare}
               active={pathname.startsWith("/agent")}
+            />
+            <RailButton
+              to="/form"
+              label="Form"
+              icon={ClipboardList}
+              active={pathname.startsWith("/form")}
             />
             <RailButton
               to="/settings"

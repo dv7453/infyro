@@ -106,7 +106,7 @@ export function createWebSocketServer(server: import("node:http").Server) {
               console.warn("Failed to load conversation memory:", err);
             }
 
-            session = createSession(
+            session = await createSession(
               authData.user.id,
               settings.persona_prompt ?? "",
               {

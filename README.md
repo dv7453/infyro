@@ -12,7 +12,7 @@ Talk to your agent in plain language. Ask it to draft an email, book a meeting, 
 - Send email and schedule meetings on your behalf (with confirmation when you want it)
 - Create Docs / Sheets and save files to Drive
 - Tune how the agent writes (persona) and which tools need your OK
-- (Optional) Reach the same agent over WhatsApp
+- (Optional) Reach the same agent over Telegram (or WhatsApp)
 
 ---
 
@@ -50,7 +50,10 @@ infyro/
 1. **Console setup** — follow [`backend/SETUP.md`](backend/SETUP.md) (Google OAuth + Supabase).
 2. **Database** — in the Supabase SQL Editor, run:
    - [`backend/migrations/001_initial.sql`](backend/migrations/001_initial.sql)
+   - [`backend/migrations/003_feedback.sql`](backend/migrations/003_feedback.sql)
+   - [`backend/migrations/005_byok.sql`](backend/migrations/005_byok.sql) — per-user OpenAI / Groq keys
    - (Optional) [`backend/migrations/002_whatsapp.sql`](backend/migrations/002_whatsapp.sql)
+   - (Optional) [`backend/migrations/004_telegram.sql`](backend/migrations/004_telegram.sql) — see [`backend/TELEGRAM_SETUP.md`](backend/TELEGRAM_SETUP.md)
 3. **Backend**
 
    ```bash

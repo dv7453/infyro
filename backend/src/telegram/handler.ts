@@ -17,15 +17,14 @@ import {
 import {
   createLink,
   findValidLinkCode,
-  getLinkByPhone,
+  getLinkByChatId,
   markLinkCodeUsed,
-} from "../db/whatsapp.js";
+} from "../db/telegram.js";
 import { config } from "../config.js";
-import { sendWhatsAppMessage } from "./send.js";
+import { sendTelegramMessage } from "./send.js";
 import {
-  getWhatsAppSession,
-  normalizePhone,
-  setWhatsAppSession,
+  getTelegramSession,
+  setTelegramSession,
 } from "./sessions.js";
 
 const YES = new Set(["yes", "y", "confirm"]);
@@ -38,7 +37,21 @@ function parseYesNo(text: string): boolean | null {
   return null;
 }
 
-function createWhatsAppSink(phone: string): {
+function extractLinkCode(text: string): string | null {
+  const trimmed = text.trim();
+  const startMatch = trimmed.match(/^\/start(?:@\w+)?(?:\s+(.+))?$/i);
+  if (startMatch) {
+    const payload = (startMatch[1] ?? "").trim();
+    if (/^\d{6}$/.test(payload)) return payload;
+    return null;
+  }
+  const codeMatch = trimmed.match(/\b(\d{6})\b/);
+  if (codeMatch) return codeMatch[1] ?? null;
+  if (/^\d{6}$/.test(trimmed)) return trimmed;
+  return null;
+}
+
+function createTelegramSink(chatId: string): {
   sink: AgentEventSink;
   flushFinalReply: () => Promise<void>;
 } {
@@ -49,25 +62,19 @@ function createWhatsAppSink(phone: string): {
     onToken(content) {
       pendingReply += content;
     },
-    onToolCallStarted() {
-      // Noisy over WhatsApp — skip
-    },
-    onToolResult() {
-      // Included in final model follow-up
-    },
+    onToolCallStarted() {},
+    onToolResult() {},
     onConfirmationRequired(_toolName, _params, summary) {
       confirmationSent = true;
-      void sendWhatsAppMessage(
-        phone,
+      void sendTelegramMessage(
+        chatId,
         `${summary}\n\nReply yes or no to continue.`,
-      ).catch((err) => console.error("WhatsApp confirm prompt failed:", err));
+      ).catch((err) => console.error("Telegram confirm prompt failed:", err));
     },
-    onMessageComplete() {
-      // flushed by caller after handleUserMessage / handleConfirm
-    },
+    onMessageComplete() {},
     onError(message) {
-      void sendWhatsAppMessage(phone, message).catch((err) =>
-        console.error("WhatsApp error send failed:", err),
+      void sendTelegramMessage(chatId, message).catch((err) =>
+        console.error("Telegram error send failed:", err),
       );
     },
   };
@@ -76,7 +83,7 @@ function createWhatsAppSink(phone: string): {
     if (confirmationSent) return;
     const text = pendingReply.trim();
     if (text) {
-      await sendWhatsAppMessage(phone, text);
+      await sendTelegramMessage(chatId, text);
     }
   }
 
@@ -84,10 +91,10 @@ function createWhatsAppSink(phone: string): {
 }
 
 async function loadOrCreateSession(
-  phone: string,
+  chatId: string,
   userId: string,
 ): Promise<AgentSession> {
-  const existing = getWhatsAppSession(phone);
+  const existing = getTelegramSession(chatId);
   if (existing && existing.userId === userId) {
     return existing;
   }
@@ -95,8 +102,8 @@ async function loadOrCreateSession(
   const settings = await ensureAgentSettings(userId);
   const conversationId = await getOrCreateLatestConversation(
     userId,
-    "whatsapp",
-    phone,
+    "telegram",
+    chatId,
   );
   const stored = await loadConversationMessages(conversationId);
   const priorMessages = stored
@@ -117,69 +124,83 @@ async function loadOrCreateSession(
     mergeDefaults(settings.defaults),
     priorMessages,
   );
-  setWhatsAppSession(phone, session);
+  setTelegramSession(chatId, session);
   return session;
 }
 
-export async function processWhatsAppIncoming(params: {
-  from: string;
+export async function processTelegramIncoming(params: {
+  chatId: string;
   text: string | null;
-  type: string;
+  username: string | null;
 }): Promise<void> {
-  const phone = normalizePhone(params.from);
+  const chatId = String(params.chatId);
 
-  if (params.type !== "text" || params.text == null) {
-    await sendWhatsAppMessage(
-      phone,
+  if (params.text == null) {
+    await sendTelegramMessage(
+      chatId,
       "I can only read text messages right now.",
     );
     return;
   }
 
   const text = params.text.trim();
-  const link = await getLinkByPhone(phone);
+  const link = await getLinkByChatId(chatId);
 
   if (!link) {
-    const codeMatch = text.match(/\b(\d{6})\b/);
-    const code = codeMatch?.[1] ?? ( /^\d{6}$/.test(text) ? text : null);
-
+    const code = extractLinkCode(text);
     if (code) {
       const row = await findValidLinkCode(code);
       if (row) {
-        await createLink(phone, row.user_id);
+        await createLink(chatId, row.user_id, params.username);
         await markLinkCodeUsed(code);
-        await sendWhatsAppMessage(
-          phone,
-          "Connected! You can now chat with your agent here.",
+        await sendTelegramMessage(
+          chatId,
+          "Connected! You can now chat with your Infyro agent here.",
         );
         return;
       }
+      await sendTelegramMessage(
+        chatId,
+        "That code is invalid or expired. Generate a new one in Infyro Settings → Telegram.",
+      );
+      return;
     }
 
-    const business = config.WHATSAPP_BUSINESS_NUMBER || "this WhatsApp number";
-    await sendWhatsAppMessage(
-      phone,
-      `This WhatsApp isn't linked yet. Open Infyro Settings → Connect WhatsApp, get a 6-digit code, and text that code to ${business}.`,
+    const bot = config.TELEGRAM_BOT_USERNAME
+      ? `@${config.TELEGRAM_BOT_USERNAME.replace(/^@/, "")}`
+      : "this bot";
+    await sendTelegramMessage(
+      chatId,
+      `This Telegram chat isn't linked yet. Open Infyro Settings → Telegram, get a 6-digit code, then send it here (or tap the deep link).\n\nBot: ${bot}`,
     );
     return;
   }
 
-  const session = await loadOrCreateSession(phone, link.user_id);
-  const { sink, flushFinalReply } = createWhatsAppSink(phone);
+  // Ignore bare /start after already linked
+  if (/^\/start(?:@\w+)?(?:\s+.*)?$/i.test(text)) {
+    await sendTelegramMessage(
+      chatId,
+      "You're already connected. Send a message to chat with your agent.",
+    );
+    return;
+  }
+
+  const session = await loadOrCreateSession(chatId, link.user_id);
+  const { sink, flushFinalReply } = createTelegramSink(chatId);
 
   if (session.pendingToolCall) {
     const answer = parseYesNo(text);
     if (answer === null) {
-      await sendWhatsAppMessage(phone, "Reply yes or no");
+      await sendTelegramMessage(chatId, "Reply yes or no");
       return;
     }
     await handleConfirm(session, answer, sink);
     await flushFinalReply();
-    setWhatsAppSession(phone, session);
+    setTelegramSession(chatId, session);
     return;
   }
 
   await handleUserMessage(session, text, sink);
   await flushFinalReply();
-  setWhatsAppSession(phone, session);
+  setTelegramSession(chatId, session);
 }

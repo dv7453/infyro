@@ -1,6 +1,6 @@
 import { supabase } from "../supabase.js";
 
-export type ConversationSource = "web" | "whatsapp";
+export type ConversationSource = "web" | "whatsapp" | "telegram";
 
 export type StoredMessage = {
   id: string;
@@ -49,7 +49,10 @@ export async function getOrCreateLatestConversation(
     .eq("source", source)
     .order("created_at", { ascending: false });
 
-  if (source === "whatsapp" && externalKey) {
+  if (
+    (source === "whatsapp" || source === "telegram") &&
+    externalKey
+  ) {
     query = query.eq("external_key", externalKey);
   }
 

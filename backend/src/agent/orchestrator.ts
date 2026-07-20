@@ -21,7 +21,7 @@ import {
 import { summarizeToolResult } from "../tools/summaries.js";
 import type { ServerMessage } from "../ws/protocol.js";
 import { trimHistoryForModel } from "./historyBudget.js";
-import { getHeavyModel, groq } from "./groq.js";
+import { resolveLlmForUser, type LlmRuntime } from "./llm.js";
 import { buildSystemPrompt } from "./prompts.js";
 import { selectModelForTurn } from "./routeModel.js";
 import type { AgentEventSink } from "./sink.js";
@@ -40,6 +40,7 @@ export type AgentSession = {
   personaPrompt: string;
   defaults: DefaultsSettings;
   toolPermissions: ToolPermissions;
+  llm: LlmRuntime;
   history: ChatCompletionMessageParam[];
   pendingToolCall: PendingToolCall | null;
   busy: boolean;
@@ -106,11 +107,12 @@ type StreamOutcome = {
 
 async function streamCompletion(
   sink: AgentEventSink,
+  session: AgentSession,
   history: ChatCompletionMessageParam[],
   model: string,
 ): Promise<StreamOutcome> {
   const messages = trimHistoryForModel(history);
-  const stream = await groq.chat.completions.create({
+  const stream = await session.llm.client.chat.completions.create({
     model,
     messages,
     tools: openAiTools,
@@ -215,7 +217,12 @@ async function streamFollowUp(
   session: AgentSession,
   model: string,
 ): Promise<void> {
-  const outcome = await streamCompletion(sink, session.history, model);
+  const outcome = await streamCompletion(
+    sink,
+    session,
+    session.history,
+    model,
+  );
 
   if (outcome.content) {
     session.history.push({ role: "assistant", content: outcome.content });
@@ -341,6 +348,9 @@ export async function handleUserMessage(
 
   session.busy = true;
   try {
+    // Pick up BYOK changes without forcing reconnect.
+    session.llm = await resolveLlmForUser(session.userId);
+
     session.history.push({ role: "user", content });
     if (session.conversationId) {
       await persistMessage(session.conversationId, "user", content);
@@ -354,8 +364,13 @@ export async function handleUserMessage(
     }
 
     // Invisible pre-step: route light vs heavy (no user-facing loading state)
-    const model = await selectModelForTurn(session.history);
-    const outcome = await streamCompletion(sink, session.history, model);
+    const model = await selectModelForTurn(session.llm, session.history);
+    const outcome = await streamCompletion(
+      sink,
+      session,
+      session.history,
+      model,
+    );
 
     if (outcome.toolCalls.length > 0) {
       session.history.push({
@@ -408,10 +423,12 @@ export async function handleConfirm(
 
   session.pendingToolCall = null;
   session.busy = true;
-  // Confirmations are always for high-risk tools — stay on heavy.
-  const model = getHeavyModel();
 
   try {
+    session.llm = await resolveLlmForUser(session.userId);
+    // Confirmations are always for high-risk tools — stay on heavy.
+    const model = session.llm.heavyModel;
+
     if (!approved) {
       const cancelled = { error: "cancelled", message: "Cancelled by user" };
       sink.onToolResult?.(pending.toolName, false, "Cancelled by user");
@@ -457,20 +474,22 @@ export async function handleConfirm(
   }
 }
 
-export function createSession(
+export async function createSession(
   userId: string,
   personaPrompt: string,
   toolPermissions: ToolPermissions,
   conversationId: string | null,
   defaults: DefaultsSettings = EMPTY_DEFAULTS,
   priorMessages: Array<{ role: "user" | "assistant"; content: string }> = [],
-): AgentSession {
+): Promise<AgentSession> {
+  const llm = await resolveLlmForUser(userId);
   return {
     userId,
     conversationId,
     personaPrompt,
     defaults,
     toolPermissions,
+    llm,
     history: [
       {
         role: "system",

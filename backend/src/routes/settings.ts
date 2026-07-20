@@ -10,6 +10,14 @@ import {
   updateToolPermissions,
   type ToolPermission,
 } from "../db/agentSettings.js";
+import {
+  deleteUserLlmKey,
+  getUserLlmKey,
+  isLlmProvider,
+  maskApiKey,
+  updateUserLlmProvider,
+  upsertUserLlmKey,
+} from "../db/llmKeys.js";
 import { requireAuth, type AuthedRequest } from "../middleware/auth.js";
 
 export const settingsRouter = Router();
@@ -139,6 +147,77 @@ settingsRouter.put("/defaults", requireAuth, async (req, res) => {
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to update defaults";
+    res.status(500).json({ message });
+  }
+});
+
+settingsRouter.get("/byok", requireAuth, async (req, res) => {
+  try {
+    const user = (req as AuthedRequest).user;
+    const row = await getUserLlmKey(user.id);
+    res.json({
+      provider: row?.provider ?? "groq",
+      has_key: Boolean(row?.api_key),
+      key_hint: row?.api_key ? maskApiKey(row.api_key) : null,
+    });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to load BYOK settings";
+    res.status(500).json({ message });
+  }
+});
+
+const byokSchema = z.object({
+  provider: z.enum(["groq", "openai"]),
+  /** Omit or empty to keep the existing key when switching provider. */
+  api_key: z.string().optional(),
+  clear: z.boolean().optional(),
+});
+
+settingsRouter.put("/byok", requireAuth, async (req, res) => {
+  try {
+    const parsed = byokSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: "Invalid request body" });
+      return;
+    }
+    const user = (req as AuthedRequest).user;
+    const { provider, api_key, clear } = parsed.data;
+
+    if (clear) {
+      await deleteUserLlmKey(user.id);
+      res.json({
+        provider,
+        has_key: false,
+        key_hint: null,
+      });
+      return;
+    }
+
+    const trimmed = api_key?.trim() ?? "";
+    if (trimmed) {
+      if (!isLlmProvider(provider)) {
+        res.status(400).json({ message: "Invalid provider" });
+        return;
+      }
+      const row = await upsertUserLlmKey(user.id, provider, trimmed);
+      res.json({
+        provider: row.provider,
+        has_key: true,
+        key_hint: maskApiKey(row.api_key),
+      });
+      return;
+    }
+
+    const row = await updateUserLlmProvider(user.id, provider);
+    res.json({
+      provider: row.provider,
+      has_key: true,
+      key_hint: maskApiKey(row.api_key),
+    });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to save BYOK settings";
     res.status(500).json({ message });
   }
 });

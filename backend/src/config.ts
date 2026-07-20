@@ -7,7 +7,8 @@ const envSchema = z.object({
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   SUPABASE_JWT_SECRET: z.string().min(1),
-  GROQ_API_KEY: z.string().min(1),
+  /** Platform fallback when the user has not saved a BYOK key. */
+  GROQ_API_KEY: z.string().default(""),
   GROQ_MODEL_LIGHT: z.string().default("openai/gpt-oss-20b"),
   GROQ_MODEL_HEAVY: z.string().default("openai/gpt-oss-120b"),
   PORT: z.coerce.number().int().positive().default(8080),
@@ -17,6 +18,14 @@ const envSchema = z.object({
   WHATSAPP_PHONE_NUMBER_ID: z.string().default(""),
   WHATSAPP_VERIFY_TOKEN: z.string().default(""),
   WHATSAPP_BUSINESS_NUMBER: z.string().default(""),
+  TELEGRAM_BOT_TOKEN: z.string().default(""),
+  TELEGRAM_BOT_USERNAME: z.string().default(""),
+  TELEGRAM_WEBHOOK_SECRET: z.string().default(""),
+  /** When true, use long-polling instead of (or without) a public webhook. */
+  TELEGRAM_USE_POLLING: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true" || v === "1"),
 });
 
 export type Config = z.infer<typeof envSchema>;
