@@ -49,10 +49,6 @@ Thumbs.db
 *.sln
 *.sw?
 
-# Local tooling / design-export leftovers
-.lovable/
-**/.lovable/
-
 # Local SQL dumps / scratch (schema for deploy stays in backend/migrations/)
 *.sql.bak
 *.dump
