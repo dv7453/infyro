@@ -1,32 +1,61 @@
+# Secrets
 .env
 .env.*
 !.env.example
-frontend/.env
-frontend/.env.*
-!frontend/.env.example
+!**/.env.example
 
-.venv/
-__pycache__/
-**/__pycache__/
-*.py[cod]
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-dist/
-build/
-*.egg-info/
+# Dependencies
 node_modules/
-frontend/dist/
-frontend/node_modules/
-.DS_Store
-data/
+
+# Build / generated
+dist/
+dist-ssr/
+build/
+.output/
+.vinxi/
+.tanstack/
+.nitro/
+.wrangler/
+.dev.vars
+.next/
+out/
+*.tsbuildinfo
+
+# Package manager noise (npm lockfiles are kept)
+bun.lock
+bun.lockb
+yarn.lock
+pnpm-lock.yaml
+
+# Logs & caches
+logs/
 *.log
-.coverage
-htmlcov/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+.cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
 .idea/
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# Generated local runtime configs
-runtimes/openclaw/openclaw.local.json
-runtimes/hermes/config.local.yaml
+# Local tooling / design-export leftovers
+.lovable/
+**/.lovable/
 
+# Local SQL dumps / scratch (schema for deploy stays in backend/migrations/)
+*.sql.bak
+*.dump
+tmp/
+temp/
+scratch/

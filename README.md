@@ -1,135 +1,96 @@
 # Infyro
 
-**Every market, one thread.** · beta 0.0.1
+Infyro helps everyday people get real work done with the tools they already use — Gmail, Calendar, Docs, Sheets, and Drive — without needing to learn menus, shortcuts, or “power user” workflows.
 
-Infyro is for **anyone** who wants personal AI agents without building infrastructure.  
-You create an agent, customise how it thinks (persona, model, **temperature**, tools), connect it to the places you already live — **Telegram, Slack, email, and more** — and talk to it there. It can fetch **live data** or trigger **real actions** through tools/MCPs (example: you message “buy Sensex” on Telegram → a trading MCP carries it out).
+Talk to your agent in plain language. Ask it to draft an email, book a meeting, or create a document. You stay in control: sensitive actions ask for your confirmation before anything is sent or changed.
 
-This repo’s first niche is **markets** (prices + alerts) as a working demo. The product direction is broader: **your agents · your channels · your tools**.
+---
 
-> **Beta 0.0.1** — early build. Dashboard + Telegram path are live; Slack/email and more action MCPs are part of the vision / next iterations.
+## What you can do
 
-## User experience flow
+- Connect Google once and work through a simple chat
+- Send email and schedule meetings on your behalf (with confirmation when you want it)
+- Create Docs / Sheets and save files to Drive
+- Tune how the agent writes (persona) and which tools need your OK
+- (Optional) Reach the same agent over WhatsApp
 
-How easy it is to customise and use an agent (beta 0.0.1):
+---
 
-```mermaid
-flowchart TD
-  A[Open Infyro dashboard] --> B[Create any agent you want]
-  B --> C[Customise: name, persona, temperature, model]
-  C --> D[Add your LLM key BYOK]
-  D --> E[Attach tools / MCPs — live data or actions]
-  E --> F[Connect channels: Telegram / Slack / Email / …]
-  F --> G{How do you use it?}
-  G -->|Ask for live data| H[Agent calls tools and replies on the channel]
-  G -->|Ask for an action| I[Example: buy Sensex on Telegram → MCP executes]
-  H --> J[Dashboard: memory, alerts, settings]
-  I --> J
-  J --> K[Tweak temperature, persona, tools, channels anytime]
+## For developers
+
+### Repo layout
+
+```text
+infyro/
+├── README.md                 # This file
+├── backend/                  # Node/Express API + WebSocket agent
+│   ├── src/                  # Source (auth, settings, tools, Groq, WhatsApp)
+│   ├── migrations/           # Supabase SQL schema (run once per environment)
+│   ├── .env.example
+│   ├── SETUP.md              # Google Cloud + Supabase console steps
+│   └── WHATSAPP_SETUP.md     # Optional WhatsApp Cloud API
+└── frontend/                 # TanStack Start (Vite) web app
+    ├── src/                  # UI, auth callback, agent chat, settings
+    └── .env.example
 ```
 
-Full PlantUML: [`docs/user-experience-flow.puml`](docs/user-experience-flow.puml)
+### Stack
 
-```plantuml
-@startuml
-title Infyro UX — beta 0.0.1
+| Layer | Tech |
+|-------|------|
+| Frontend | TanStack Start, React, Vite, Tailwind |
+| Auth | Supabase Auth (Google OAuth) |
+| Backend | Node.js, Express, WebSocket (`/ws`) |
+| Agent | Groq (tool-calling loop) |
+| Tools | Google APIs (Gmail, Calendar, Docs, Sheets, Drive) |
+| Data | Supabase (Postgres) |
 
-|You|
-start
-:Open dashboard;
+### Quick start
 
-|Dashboard|
-:Create any agent;
-:Customise persona + temperature + model;
-:BYOK LLM key;
-:Attach tools / MCPs;
-:Connect Telegram / Slack / Email / …;
+1. **Console setup** — follow [`backend/SETUP.md`](backend/SETUP.md) (Google OAuth + Supabase).
+2. **Database** — in the Supabase SQL Editor, run:
+   - [`backend/migrations/001_initial.sql`](backend/migrations/001_initial.sql)
+   - (Optional) [`backend/migrations/002_whatsapp.sql`](backend/migrations/002_whatsapp.sql)
+3. **Backend**
 
-|Channels|
-fork
-  :Ask for live data;
-fork again
-  :Ask for an action\n(e.g. "buy Sensex" → MCP);
-end fork
+   ```bash
+   cd backend
+   cp .env.example .env   # fill values
+   npm install
+   npm run dev            # http://localhost:8080
+   ```
 
-|Dashboard|
-:Review + tweak settings anytime;
-stop
-@enduml
+4. **Frontend**
+
+   ```bash
+   cd frontend
+   cp .env.example .env   # same Supabase project + VITE_BACKEND_URL
+   npm install
+   npm run dev            # http://localhost:3000
+   ```
+
+5. In Supabase → Authentication → URL Configuration, allow:
+   - Site URL: `http://localhost:3000`
+   - Redirect: `http://localhost:3000/auth/callback`
+
+### Environment (summary)
+
+**Backend** (`backend/.env`) — Google client credentials, Supabase URL / service role / JWT secret, Groq key, `FRONTEND_ORIGIN`, optional WhatsApp vars. See `backend/.env.example`.
+
+**Frontend** (`frontend/.env`):
+
+```env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_BACKEND_URL=http://localhost:8080
 ```
 
-**What you customise on the dashboard (beta):** agent name & look, persona text, LLM provider + key, temperature/style, which tools/sources are bound, channel linking (Telegram live today), pause/resume, memory & conversation history, alerts.
+### Deploy notes
 
-## Architecture
+- Run migrations against the target Supabase project before first traffic.
+- Set `FRONTEND_ORIGIN` on the backend to your production frontend origin(s), comma-separated if needed.
+- Point frontend `VITE_BACKEND_URL` at the public API URL.
+- Add production Site URL + `/auth/callback` in Supabase Auth.
+- Never commit `.env` files (they are gitignored).
 
-![Infyro system architecture](docs/architecture.jpg)
-
-| Role | Does | Must not |
-|------|------|----------|
-| Hermes | Channel runtime (Telegram today): chat, memory, deliver alerts | Own cron jobs |
-| OpenClaw worker | Background checks / tool-driven jobs | Talk to users directly |
-| FastAPI | Auth, agents, settings, catalog | Conversational loop |
-| Tools / MCP | Live data **and** actions | — |
-
-## Repo layout
-
-```
-apps/api/          FastAPI
-frontend/          React dashboard (Vite)
-packages/db/       Models + migrations
-packages/*_mcp/    Tools (demo: markets)
-runtimes/hermes/   Channel runtime (Telegram)
-runtimes/openclaw/ Background worker
-scripts/           migrate, seed, doctor, start-all
-docs/              Deploy, UX PlantUML, architecture
-```
-
-## Local quick start
-
-```bash
-cp .env.example .env
-cp frontend/.env.example frontend/.env
-# set FERNET_KEY, JWT_SECRET, TELEGRAM_BOT_TOKEN
-
-docker compose up -d          # optional local Postgres on :55432
-uv sync
-./scripts/migrate.sh
-./scripts/seed.sh
-
-# API
-set -a && source .env && set +a
-uv run uvicorn infyro_api.main:app --host 127.0.0.1 --port 8000
-
-# Dashboard
-cd frontend && npm install && npm run dev
-
-# Telegram channel runtime (separate terminal)
-uv run python runtimes/hermes/runtime.py
-
-# Optional background worker
-uv run python runtimes/openclaw/market_worker.py --once
-```
-
-- UI: http://127.0.0.1:5174  
-- API: http://127.0.0.1:8000/docs  
-
-Or: `./scripts/start-all.sh` (API + Hermes + worker + Vite).
-
-## Telegram bot (BotFather)
-
-1. `@BotFather` → `/newbot`
-2. Put token + username in `.env`
-3. Run Hermes; keep webhook deleted while using long-poll
-
-## Production
-
-See **[docs/DEPLOY.md](docs/DEPLOY.md)** for **Render** step-by-step (API + Hermes worker + static UI).
-
-Set `INFYRO_DEV_MODE=0` and `VITE_SKIP_AUTH=0` before a real launch.
-
-## Scripts
-
-- `./scripts/migrate.sh` — Alembic upgrade  
-- `./scripts/seed.sh` — catalog seed  
-- `./scripts/doctor.sh` — health check  
-- `./scripts/start-all.sh` — local all-in-one  
+More detail: [`backend/README.md`](backend/README.md), [`frontend/README.md`](frontend/README.md).
