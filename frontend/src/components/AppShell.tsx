@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+      <div className="flex h-full min-h-0 flex-1 items-center justify-center bg-background text-sm text-muted-foreground">
         Loading…
       </div>
     );
@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <ChatSessionProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-background">
+      <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden bg-background">
         <aside
           className="flex h-full w-[72px] shrink-0 flex-col items-center justify-between py-4"
           style={{ backgroundColor: "var(--rail)" }}

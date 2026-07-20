@@ -79,7 +79,7 @@ function SignInPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+    <div className="relative flex min-h-full flex-1 items-center justify-center overflow-hidden bg-background px-4 py-8">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full opacity-60 blur-3xl"

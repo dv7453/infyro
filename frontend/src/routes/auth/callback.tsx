@@ -93,7 +93,7 @@ function AuthCallbackPage() {
   }, [navigate]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
+    <div className="flex min-h-full flex-1 flex-col items-center justify-center gap-4 bg-background px-4">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white p-2 shadow-sm ring-1 ring-border">
         <img src={logo} alt="Infyro" className="h-full w-full object-contain" />
       </div>
